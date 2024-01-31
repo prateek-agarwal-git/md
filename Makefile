@@ -4,7 +4,8 @@ INC_DIR=./include/
 CPPFLAGS=-g -std=c++20  -Wall -I$(INC_DIR)
 DATA_INJ_OBJ_FILES=build/market_data_parser.o build/multicast_sender.o
 STRATEGY_OBJ_FILES=build/multicast_receiver.o build/tcp_client.o
-OBJ_FILES=$(DATA_INJ_OBJ_FILES) $(STRATEGY_OBJ_FILES) 
+EXCHANGE_OBJ_FILES=build/tcp_server.o
+OBJ_FILES=$(DATA_INJ_OBJ_FILES) $(STRATEGY_OBJ_FILES) $(EXCHANGE_OBJ_FILES) 
 all: build/market_data_injector  build/tests build/strategy
 
 
@@ -28,6 +29,9 @@ build/multicast_receiver.o: src/io/multicast_receiver.cpp ${INC_DIR}/* ${INC_DIR
 
 build/tcp_client.o: src/io/tcp_client.cpp ${INC_DIR}/* ${INC_DIR}/*/*
 	$(CC) $(CPPFLAGS)  -c src/io/tcp_client.cpp  -o build/tcp_client.o 
+
+build/tcp_server.o: src/io/tcp_client.cpp ${INC_DIR}/* ${INC_DIR}/*/*
+	$(CC) $(CPPFLAGS)  -c src/io/tcp_server.cpp  -o build/tcp_server.o 
 
 clean:
 	 rm -f  build/*

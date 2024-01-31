@@ -20,6 +20,8 @@ private:
                                const std::string &input,
                                const common::BinaryMarketData &);
 
+  void tcp_client_server_test();
+
   void address_splitter_test();
   std::ostream &os_;
 };

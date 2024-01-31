@@ -1,7 +1,10 @@
 #include "tests/tests.h"
 #include "io/multicast_receiver.h"
 #include "io/multicast_sender.h"
+#include "io/tcp_client.h"
+#include "io/tcp_server.h"
 #include "market_data_injector/market_data_parser.h"
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -25,12 +28,41 @@ void test_fixture::run_tests() {
   market_data_parser_test_2();
   market_data_parser_test_3();
   multicast_sender_receiver_test();
+  tcp_client_server_test();
   address_splitter_test();
 }
 
+void test_fixture::tcp_client_server_test() {
+  std::string address_info = "127.0.0.1:8080";
+  std::string received_response_at_client;
+  auto client_read_cb = [&received_response_at_client](std::string_view data) {
+    received_response_at_client = data;
+  };
+  std::string received_request_at_server;
+  io::TCPServer server(address_info, os_);
+  auto server_read_cb = [&received_request_at_server,
+                         &server](std::string_view data) {
+    received_request_at_server = data;
+    std::string tmp = received_request_at_server;
+    std::for_each(tmp.begin(), tmp.end(), [](auto &a) { a = toupper(a); });
+    server(tmp);
+  };
+  server.set_read_cb(server_read_cb);
+  std::thread read_thread{&io::TCPServer::start_reading, &server};
+  sleep(2);
+  io::TCPClient client(address_info, os_, client_read_cb);
+  client("hello");
+  assert_true("tcp_client_server_test",
+              received_response_at_client == "HELLO" &&
+                  received_request_at_server == "hello");
+
+  std::thread stop_signal_thread{&io::TCPServer::stop_reading, &server};
+  read_thread.join();
+  stop_signal_thread.join();
+}
+std::string address = "127.0.0.1:8080";
 void test_fixture::address_splitter_test() {
-  std::string address = "127.0.0.1:8080";
-  auto [ip,port] =common::get_ip_port(address);
+  auto [ip, port] = common::get_ip_port(address);
   assert_true("address_splitter_test", port == 8080 && ip == "127.0.0.1");
 }
 

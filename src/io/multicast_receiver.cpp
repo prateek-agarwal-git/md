@@ -39,18 +39,16 @@ void MulticastReceiver::start_reading() {
   char in_buffer[1024];
   unsigned int addrlen = sizeof(addr_);
   while (!stop_reading_) {
-    int cnt = recvfrom(fd_, in_buffer, sizeof(in_buffer), 0,
+    int cnt = recvfrom(fd_, in_buffer, sizeof(in_buffer), MSG_DONTWAIT,
                        (struct sockaddr *)&addr_, &addrlen);
-    if (cnt < 0) {
-      os_ << "MCR: recvfrom error. errno= " << errno << std::endl;
-      exit(EXIT_FAILURE);
-    } else if (cnt == 0) {
+
+    if (cnt == 0) {
       break;
     }
-    fn_({in_buffer, std::size_t(cnt)});
+    if (cnt > 0) {
+      fn_({in_buffer, std::size_t(cnt)});
+    }
   }
 }
-void MulticastReceiver::stop_reading(){
-    stop_reading_ = true;
-}
+void MulticastReceiver::stop_reading() { stop_reading_ = true; }
 } // namespace io

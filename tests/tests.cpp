@@ -4,6 +4,7 @@
 #include "io/multicast_sender.h"
 #include "io/tcp_client.h"
 #include "io/tcp_server.h"
+#include "strategy/order_book.h"
 #include "market_data_injector/market_data_parser.h"
 #include "tests/test_server.h"
 #include <algorithm>
@@ -26,12 +27,12 @@ int main() {
 namespace tests {
 
 void test_fixture::run_tests() {
-    market_data_parser_test_1();
-    market_data_parser_test_2();
-    market_data_parser_test_3();
-    multicast_sender_receiver_test();
-    tcp_client_server_test();
-    address_splitter_test();
+  market_data_parser_test_1();
+  market_data_parser_test_2();
+  market_data_parser_test_3();
+  multicast_sender_receiver_test();
+  tcp_client_server_test();
+  address_splitter_test();
   exchange_test();
 }
 
@@ -46,7 +47,7 @@ void test_fixture::exchange_test() {
   E.set_read_cb();
   E.start_reading();
   auto response = S.response();
-  
+
   assert_true("exchange_test",
               std::tolower(request.side) == response.side &&
                   std::tolower(request.order_category) ==

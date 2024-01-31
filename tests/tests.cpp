@@ -25,6 +25,13 @@ void test_fixture::run_tests() {
   market_data_parser_test_2();
   market_data_parser_test_3();
   multicast_sender_receiver_test();
+  address_splitter_test();
+}
+
+void test_fixture::address_splitter_test() {
+  std::string address = "127.0.0.1:8080";
+  auto [ip,port] =common::get_ip_port(address);
+  assert_true("address_splitter_test", port == 8080 && ip == "127.0.0.1");
 }
 
 void test_fixture::multicast_sender_receiver_test() {

@@ -1,13 +1,25 @@
 #pragma once
 #include <cstdint>
+#include <cstring>
 #include <ostream>
 #include <string>
-#include <cstring>
+#include <cassert>
 
 namespace common {
 enum class Side : char { Bid = 'B', Sell = 'S' };
 enum class OrderCategory : char { New = 'N', Cancel = 'C', Trade = 'T' };
 
+std::pair<std::string /*ip_octets*/, uint16_t /*port number*/>
+inline get_ip_port(const std::string &address) {
+  auto index = address.find_first_of(":");
+  if (index == std::string::npos){
+    assert(false);
+  }
+  std::string ip = address.substr(0,index);
+  std::uint16_t port = std::stoi(address.substr(index+1));
+  return {ip,port};
+
+}
 struct BinaryMarketData {
   static constexpr std::size_t symbol_length = 8;
   static constexpr double double_precision =

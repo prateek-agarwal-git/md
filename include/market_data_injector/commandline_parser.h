@@ -8,9 +8,6 @@
 
 namespace commandline {
 
-static constexpr std::string_view usage = R"( 
-Usage: ./<binary-name> --in_file=SCH.log --multicast_ip=239.50.50.12 --multicast_port=10812
-)";
 std::tuple<std::string, std::string, int16_t /*port*/>
 parse_commandline(int argc, char **argv) {
   std::string in_file;

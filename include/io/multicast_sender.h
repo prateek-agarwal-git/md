@@ -10,7 +10,7 @@ namespace io {
 struct MulticastSender {
   MulticastSender(const std::string &group_ip, std::uint16_t port,
                   std::ostream &os);
-  int operator()(std::string_view data);
+  void operator()(std::string_view data);
 private:
   int fd_;
   std::ostream &os_;

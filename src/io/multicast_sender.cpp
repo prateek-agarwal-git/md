@@ -5,14 +5,13 @@
 #include <sys/socket.h>
 
 namespace io {
-int MulticastSender::operator()(std::string_view data) {
+void MulticastSender::operator()(std::string_view data) {
   int cnt = sendto(fd_, data.data(), data.size(), 0, (struct sockaddr *)&addr_,
                    sizeof(addr_));
   if (cnt < 0) {
     os_ << "sendto Error. errno = " << errno << std::endl;
     exit(EXIT_FAILURE);
   }
-  return cnt;
 }
 
 MulticastSender::MulticastSender(const std::string &group_ip,

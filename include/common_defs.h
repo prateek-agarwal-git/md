@@ -1,24 +1,24 @@
 #pragma once
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <ostream>
 #include <string>
-#include <cassert>
 
 namespace common {
 enum class Side : char { Bid = 'B', Sell = 'S' };
 enum class OrderCategory : char { New = 'N', Cancel = 'C', Trade = 'T' };
 
-std::pair<std::string /*ip_octets*/, uint16_t /*port number*/>
-inline get_ip_port(const std::string &address) {
+std::pair<std::string /*ip_octets*/,
+          uint16_t /*port number*/> inline get_ip_port(const std::string
+                                                           &address) {
   auto index = address.find_first_of(":");
-  if (index == std::string::npos){
+  if (index == std::string::npos) {
     assert(false);
   }
-  std::string ip = address.substr(0,index);
-  std::uint16_t port = std::stoi(address.substr(index+1));
-  return {ip,port};
-
+  std::string ip = address.substr(0, index);
+  std::uint16_t port = std::stoi(address.substr(index + 1));
+  return {ip, port};
 }
 struct BinaryMarketData {
   static constexpr std::size_t symbol_length = 8;
@@ -55,4 +55,25 @@ inline std::ostream &operator<<(std::ostream &os,
   os << std::endl;
   return os;
 }
+
+// each mock exchange is for one symbol
+struct Request {
+  uint64_t order_id;   // assume it to be a client order id filled by the client
+                       // for simplicity of exchange
+  char side;           // 'can be 'B'  or 'S'
+  char order_category; // 'N', 'C'
+  double price;
+  uint32_t quantity;
+} __attribute__((packed));
+
+// exchange will echo the request by turning side and order category into lower
+// case.
+struct Response {
+  uint64_t order_id;   // assume it to be a client order id filled by the client
+                       // for simplicity of exchange
+  char side;           // 'b'  or 's'
+  char order_category; // 'n'or  'c'
+  double price;
+  uint32_t quantity;
+} __attribute__((packed));
 } // namespace common

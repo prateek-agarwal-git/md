@@ -69,11 +69,34 @@ struct Request {
 // exchange will echo the request by turning side and order category into lower
 // case.
 struct Response {
-  uint64_t order_id;   // assume it to be a client order id filled by the client
+  uint64_t order_id{};   // assume it to be a client order id filled by the client
                        // for simplicity of exchange
-  char side;           // 'b'  or 's'
-  char order_category; // 'n'or  'c'
-  double price;
-  uint32_t quantity;
+  char side{};           // 'b'  or 's'
+  char order_category{}; // 'n'or  'c'
+  double price{};
+  uint32_t quantity{};
 } __attribute__((packed));
+inline std::ostream &operator<<(std::ostream &os,
+                                const Request &request) {
+  os << "Request: ";
+  os << "order_id=" << request.order_id;
+  os << ",side=" << request.side;
+  os << ",order_category=" << request.order_category;
+  os << ",price=" << request.price;
+  os << ",quantity=" << request.quantity;
+  os << std::endl;
+  return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os,
+                                const Response &response) {
+  os << "Response: ";
+  os << "order_id=" << response.order_id;
+  os << ",side=" << response.side;
+  os << ",order_category=" << response.order_category;
+  os << ",price=" << response.price;
+  os << ",quantity=" << response.quantity;
+  os << std::endl;
+  return os;
+}
 } // namespace common

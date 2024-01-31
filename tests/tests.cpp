@@ -1,9 +1,11 @@
 #include "tests/tests.h"
+#include "exchange/exchange.h"
 #include "io/multicast_receiver.h"
 #include "io/multicast_sender.h"
 #include "io/tcp_client.h"
 #include "io/tcp_server.h"
 #include "market_data_injector/market_data_parser.h"
+#include "tests/test_server.h"
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -24,14 +26,35 @@ int main() {
 namespace tests {
 
 void test_fixture::run_tests() {
-  market_data_parser_test_1();
-  market_data_parser_test_2();
-  market_data_parser_test_3();
-  multicast_sender_receiver_test();
-  tcp_client_server_test();
-  address_splitter_test();
+    market_data_parser_test_1();
+    market_data_parser_test_2();
+    market_data_parser_test_3();
+    multicast_sender_receiver_test();
+    tcp_client_server_test();
+    address_splitter_test();
+  exchange_test();
 }
 
+void test_fixture::exchange_test() {
+  common::Request request{.order_id = 2,
+                          .side = 'B',
+                          .order_category = 'N',
+                          .price = 100.00,
+                          .quantity = 23};
+  TestServer S(request);
+  exchange::Exchange E(S, os_);
+  E.set_read_cb();
+  E.start_reading();
+  auto response = S.response();
+  
+  assert_true("exchange_test",
+              std::tolower(request.side) == response.side &&
+                  std::tolower(request.order_category) ==
+                      response.order_category &&
+                  response.order_id == request.order_id &&
+                  request.quantity == response.quantity &&
+                  std::abs(response.price - request.price) < 0.001);
+}
 void test_fixture::tcp_client_server_test() {
   std::string address_info = "127.0.0.1:8080";
   std::string received_response_at_client;
@@ -67,12 +90,11 @@ void test_fixture::address_splitter_test() {
 }
 
 void test_fixture::multicast_sender_receiver_test() {
-  const std::string multicast_ip = "239.50.50.12";
-  const uint16_t multicast_port = 10812;
+  const std::string multicast_address = "239.50.50.12:10812";
   std::string ans;
   auto cb = [&ans](std::string_view output) { ans += output; };
-  io::MulticastSender ms(multicast_ip, multicast_port, os_);
-  io::MulticastReceiver mr(multicast_ip, multicast_port, os_, cb);
+  io::MulticastSender ms(multicast_address, os_);
+  io::MulticastReceiver mr(multicast_address, os_, cb);
   std::thread reader_thread{&io::MulticastReceiver::start_reading, &mr};
   ms("hello");
   ms(" ");

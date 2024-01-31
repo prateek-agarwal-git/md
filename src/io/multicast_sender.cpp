@@ -1,8 +1,9 @@
 #include "io/multicast_sender.h"
-#include <string.h>
+#include "common_defs.h"
 #include <netinet/in.h>
-#include <sys/types.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 namespace io {
 void MulticastSender::operator()(std::string_view data) {
@@ -14,9 +15,10 @@ void MulticastSender::operator()(std::string_view data) {
   }
 }
 
-MulticastSender::MulticastSender(const std::string &group_ip,
-                                 std::uint16_t port, std::ostream &os)
+MulticastSender::MulticastSender(const std::string &address_info,
+                                 std::ostream &os)
     : os_(os) {
+  auto [group_ip, port] = common::get_ip_port(address_info);
   fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd_ < 0) {
     os_ << "socket opening error. errno=" << errno << std::endl;

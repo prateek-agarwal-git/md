@@ -14,6 +14,7 @@ private:
   void market_data_parser_test_2();
   void market_data_parser_test_3();
   void multicast_sender_receiver_test();
+  void exchange_test();
   void assert_true(const std::string &test_name, bool expression);
 
   void market_data_parser_test(const std::string &test_name,

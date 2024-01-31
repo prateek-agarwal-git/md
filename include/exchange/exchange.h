@@ -8,8 +8,8 @@
 namespace exchange {
 // templated on server type for ease of testing
 template <typename Server> struct Exchange {
-  Exchange(const std::string &address_info, std::ostream &os)
-      : log_(os), server_(address_info, os) {}
+  Exchange( Server& server, std::ostream &os)
+      : log_(os), server_(server) {}
   void start_reading() { server_.start_reading(); }
   void on_read(std::string_view payload) {
     auto request = reinterpret_cast<const common::Request *>(payload.data());
@@ -34,6 +34,6 @@ template <typename Server> struct Exchange {
 
 private:
   std::ostream &log_;
-  Server server_;
+  Server& server_;
 };
 } // namespace exchange

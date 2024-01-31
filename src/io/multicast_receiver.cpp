@@ -1,14 +1,15 @@
 #include "io/multicast_receiver.h"
+#include "common_defs.h"
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
 namespace io {
-MulticastReceiver::MulticastReceiver(const std::string &group_ip,
-                                     std::uint16_t port, std::ostream &os,
-                                     ReaderFn &&fn)
+MulticastReceiver::MulticastReceiver(const std::string &address_info,
+                                     std::ostream &os, ReaderFn &&fn)
     : os_(os), fn_(fn) {
+  auto [group_ip, port] = common::get_ip_port(address_info);
 
   fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd_ < 0) {

@@ -12,7 +12,7 @@ struct MulticastReceiver {
 
   using ReaderFn = std::function<void(std::string_view)>;
 
-  MulticastReceiver(const std::string &group_ip, std::uint16_t port,
+  MulticastReceiver(const std::string &address_info,
                     std::ostream &os, ReaderFn &&fn);
 
   void start_reading();

@@ -10,7 +10,6 @@
 #include "market_data_injector/market_data_parser.h"
 #include "strategy/order_book.h"
 #include "strategy/quoter.h"
-#include "strategy/request_queue.h"
 #include "strategy/response_reader.h"
 #include "strategy/side_book.h"
 #include "strategy/strategy_thread.h"

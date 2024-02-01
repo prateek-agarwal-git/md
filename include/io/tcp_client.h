@@ -17,7 +17,6 @@ template <typename ReadCb> struct TCPClient {
       : log_(os), read_cb_(read_cb) {
     const auto [ip, port] = common::get_ip_port(address_info);
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
-    std::cout << "TCPC: fd_  " << fd_ << std::endl;
     if (fd_ < 0) {
       log_ << "TCPC: Socket Error. errno = " << errno << std::endl;
       exit(EXIT_FAILURE);
@@ -48,7 +47,6 @@ template <typename ReadCb> struct TCPClient {
     read_cb_({in_buffer_, std::size_t(count)});
   }
   ~TCPClient() {
-    std::cout << "TCPC Destructor called" << std::endl;
     close(fd_);
   }
 

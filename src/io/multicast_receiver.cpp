@@ -11,8 +11,8 @@ MulticastReceiver::MulticastReceiver(const std::string &address_info,
                                      std::ostream &os, ReaderFn &&fn)
     : os_(os), fn_(fn) {
   auto [group_ip, port] = common::get_ip_port(address_info);
-  std::cout << group_ip << std::endl;
-  std::cout << port << std::endl;
+  //std::cout << group_ip << std::endl;
+  //std::cout << port << std::endl;
 
   fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd_ < 0) {
@@ -37,8 +37,7 @@ MulticastReceiver::MulticastReceiver(const std::string &address_info,
     os_ << "MCR:setsockopt error. errno= " << errno << std::endl;
     exit(EXIT_FAILURE);
   }
-  std::cout << "multicast_listener created" << std::endl;
-  std::cout << "multicast_listener created fd_" << fd_ << std::endl;
+  os_<< "multicast_listener created fd_" << fd_ << std::endl;
 }
 
 void MulticastReceiver::start_reading() {

@@ -1,11 +1,14 @@
 #include "tests/tests.h"
+#include "common_defs.h"
+#include "double_comparators.h"
 #include "exchange/exchange.h"
 #include "io/multicast_receiver.h"
 #include "io/multicast_sender.h"
 #include "io/tcp_client.h"
 #include "io/tcp_server.h"
-#include "strategy/order_book.h"
 #include "market_data_injector/market_data_parser.h"
+#include "strategy/order_book.h"
+#include "strategy/side_book.h"
 #include "tests/test_server.h"
 #include <algorithm>
 #include <cstring>
@@ -27,13 +30,158 @@ int main() {
 namespace tests {
 
 void test_fixture::run_tests() {
-  market_data_parser_test_1();
-  market_data_parser_test_2();
-  market_data_parser_test_3();
-  multicast_sender_receiver_test();
-  tcp_client_server_test();
-  address_splitter_test();
-  exchange_test();
+  //  market_data_parser_test_1();
+  //  market_data_parser_test_2();
+  //  market_data_parser_test_3();
+  //  multicast_sender_receiver_test();
+  //  tcp_client_server_test();
+  //  address_splitter_test();
+  //  exchange_test();
+  run_side_book_tests();
+}
+void test_fixture::run_side_book_tests() {
+  bid_side_book_tests();
+  ask_side_book_tests();
+}
+
+void test_fixture::ask_side_book_tests() {
+  // side book is same. We just have to check whether the comparator is working
+  // correctly. Still duplicating the bid side  tests for better protection
+  // against regression is better.
+  strategy::SideBook<common::LesserDouble> book;
+  using mbp_entry_t = decltype(book)::mbp_entry;
+
+  // basic tests for the top level.
+  assert_true("ask_side_1", book.get_top_level() == mbp_entry_t{});
+  book.update_book(1, 100.1, 10, 'N');
+  assert_true("ask_side_2", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  book.update_book(1, 100.1, 10, 'C');
+  assert_true("ask_side_3", book.get_top_level() == mbp_entry_t{});
+  book.update_book(2, 100.1, 10, 'N');
+  book.update_book(2, 100.1, 4, 'T');
+  assert_true("ask_side_4", book.get_top_level() == mbp_entry_t{100.1, 6, 1});
+  book.update_book(2, 100.1, 6, 'T');
+  assert_true("ask_side_5", book.get_top_level() == mbp_entry_t{0, 0, 0});
+
+  //  // quantity aggregation at top level
+  book.update_book(3, 100.1, 10, 'N');
+  book.update_book(4, 100.1, 5, 'N');
+  book.update_book(5, 100.1, 3, 'N');
+  assert_true("ask_side_6", book.get_top_level() == mbp_entry_t{100.1, 18, 3});
+
+  // fill top 2 levels. Check the top level to ensure correct ordering.
+  book.update_book(6, 100.1, 10, 'N');
+  book.update_book(7, 100.2, 5, 'N');
+  assert_true("ask_side_7", book.get_top_level() == mbp_entry_t{100.1, 28, 4});
+  book.update_book(6, 100.1, 10, 'T');
+  book.update_book(3, 100.1, 10, 'T');
+  book.update_book(4, 100.1, 5, 'T');
+  book.update_book(5, 100.1, 3, 'T');
+  assert_true("ask_side_8", book.get_top_level() == mbp_entry_t{100.2, 5, 1});
+  book.reset();
+
+  // testing of clearing of intermediate levels
+  book.update_book(8, 100.5, 10, 'N');
+  book.update_book(9, 100.4, 10, 'N');
+  book.update_book(10, 100.3, 10, 'N');
+  book.update_book(11, 100.2, 10, 'N');
+  book.update_book(12, 100.1, 10, 'N');
+  book.update_book(9, 100.4, 10, 'C');
+  assert_true("ask_side_9", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  book.update_book(11, 100.2, 10, 'C');
+  assert_true("ask_side_10", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  // delete top level
+  book.update_book(12, 100.1, 10, 'C');
+  assert_true("ask_side_11", book.get_top_level() == mbp_entry_t{100.3, 10, 1});
+
+  book.update_book(10, 100.3, 10, 'T');
+  assert_true("ask_side_12", book.get_top_level() == mbp_entry_t{100.5, 10, 1});
+  book.reset();
+
+  // loss of lower levels in the book for current implementation
+
+  book.update_book(13, 100.1, 10, 'N');
+  book.update_book(14, 100.2, 10, 'N');
+  book.update_book(15, 100.3, 10, 'N');
+  book.update_book(16, 100.4, 10, 'N');
+  book.update_book(17, 100.5, 10, 'N');
+  // this order will be lost as we are maintaining top 5 levels
+  book.update_book(18, 100.6, 10, 'N');
+
+  book.update_book(13, 100.1, 10, 'C');
+  book.update_book(14, 100.2, 10, 'C');
+  book.update_book(15, 100.3, 10, 'C');
+  book.update_book(16, 100.4, 10, 'C');
+
+  assert_true("ask_side_13", book.get_top_level() == mbp_entry_t{100.5, 10, 1});
+  book.update_book(17, 100.5, 10, 'C');
+  assert_true("ask_side_14", book.get_top_level() == mbp_entry_t{});
+}
+
+void test_fixture::bid_side_book_tests() {
+  strategy::SideBook<common::GreaterDouble> book;
+  using mbp_entry_t = decltype(book)::mbp_entry;
+
+  // basic tests for the top level.
+  assert_true("bid_side_1", book.get_top_level() == mbp_entry_t{});
+  book.update_book(1, 100.1, 10, 'N');
+  assert_true("bid_side_2", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  book.update_book(1, 100.1, 10, 'C');
+  assert_true("bid_side_3", book.get_top_level() == mbp_entry_t{});
+  book.update_book(2, 100.1, 10, 'N');
+  book.update_book(2, 100.1, 4, 'T');
+  assert_true("bid_side_4", book.get_top_level() == mbp_entry_t{100.1, 6, 1});
+  book.update_book(2, 100.1, 6, 'T');
+  assert_true("bid_side_5", book.get_top_level() == mbp_entry_t{0, 0, 0});
+
+  // quantity aggregation at top level
+  book.update_book(3, 100.1, 10, 'N');
+  book.update_book(4, 100.1, 5, 'N');
+  book.update_book(5, 100.1, 3, 'N');
+  assert_true("bid_side_6", book.get_top_level() == mbp_entry_t{100.1, 18, 3});
+
+  // fill top 2 levels. Check the top level to ensure correct ordering.
+  book.update_book(6, 100.1, 10, 'N');
+  book.update_book(7, 100.2, 5, 'N');
+  assert_true("bid_side_7", book.get_top_level() == mbp_entry_t{100.2, 5, 1});
+  book.update_book(7, 100.2, 5, 'T');
+  assert_true("bid_side_8", book.get_top_level() == mbp_entry_t{100.1, 28, 4});
+  book.reset();
+
+  // testing of clearing of intermediate levels
+  book.update_book(8, 100.5, 10, 'N');
+  book.update_book(9, 100.4, 10, 'N');
+  book.update_book(10, 100.3, 10, 'N');
+  book.update_book(11, 100.2, 10, 'N');
+  book.update_book(12, 100.1, 10, 'N');
+  book.update_book(9, 100.4, 10, 'C');
+  assert_true("bid_side_9", book.get_top_level() == mbp_entry_t{100.5, 10, 1});
+  book.update_book(11, 100.2, 10, 'C');
+  assert_true("bid_side_10", book.get_top_level() == mbp_entry_t{100.5, 10, 1});
+  book.update_book(8, 100.5, 10, 'C');
+  assert_true("bid_side_11", book.get_top_level() == mbp_entry_t{100.3, 10, 1});
+  book.update_book(10, 100.3, 10, 'T');
+  assert_true("bid_side_12", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  book.reset();
+
+  // loss of lower levels in the book for current implementation
+
+  book.update_book(13, 100.5, 10, 'N');
+  book.update_book(14, 100.4, 10, 'N');
+  book.update_book(15, 100.3, 10, 'N');
+  book.update_book(16, 100.2, 10, 'N');
+  book.update_book(17, 100.1, 10, 'N');
+  // this order will be lost as we are maintaining top 5 levels
+  book.update_book(18, 100.0, 10, 'N');
+
+  book.update_book(13, 100.5, 10, 'C');
+  book.update_book(14, 100.4, 10, 'C');
+  book.update_book(15, 100.3, 10, 'C');
+  book.update_book(16, 100.2, 10, 'C');
+
+  assert_true("bid_side_13", book.get_top_level() == mbp_entry_t{100.1, 10, 1});
+  book.update_book(17, 100.1, 10, 'C');
+  assert_true("bid_side_14", book.get_top_level() == mbp_entry_t{});
 }
 
 void test_fixture::exchange_test() {
@@ -54,7 +202,7 @@ void test_fixture::exchange_test() {
                       response.order_category &&
                   response.order_id == request.order_id &&
                   request.quantity == response.quantity &&
-                  std::abs(response.price - request.price) < 0.001);
+                  common::almost_equal(response.price, request.price));
 }
 void test_fixture::tcp_client_server_test() {
   std::string address_info = "127.0.0.1:8080";

@@ -1,4 +1,5 @@
 #pragma once
+#include "double_comparators.h"
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -22,10 +23,6 @@ std::pair<std::string /*ip_octets*/,
 }
 struct BinaryMarketData {
   static constexpr std::size_t symbol_length = 8;
-  static constexpr double double_precision =
-      0.001; // data in log files is upto 2 decimal places,this is kept
-             // arbitrarily accordingly as there could be precision error while
-             // reading log files.
   uint64_t epoch;
   uint64_t order_id;
   char symbol[symbol_length]{}; // All bytes will be null except the symbol.
@@ -37,8 +34,7 @@ struct BinaryMarketData {
     return epoch == other.epoch && order_id == other.order_id &&
            std::memcmp(symbol, other.symbol, symbol_length) == 0 &&
            side == other.side && order_category == other.order_category &&
-           quantity == other.quantity &&
-           std::abs(price - other.price) < double_precision;
+           quantity == other.quantity && almost_equal(price, other.price);
   }
 } __attribute__((packed));
 
@@ -69,15 +65,14 @@ struct Request {
 // exchange will echo the request by turning side and order category into lower
 // case.
 struct Response {
-  uint64_t order_id{};   // assume it to be a client order id filled by the client
+  uint64_t order_id{}; // assume it to be a client order id filled by the client
                        // for simplicity of exchange
-  char side{};           // 'b'  or 's'
+  char side{};         // 'b'  or 's'
   char order_category{}; // 'n'or  'c'
   double price{};
   uint32_t quantity{};
 } __attribute__((packed));
-inline std::ostream &operator<<(std::ostream &os,
-                                const Request &request) {
+inline std::ostream &operator<<(std::ostream &os, const Request &request) {
   os << "Request: ";
   os << "order_id=" << request.order_id;
   os << ",side=" << request.side;
@@ -88,8 +83,7 @@ inline std::ostream &operator<<(std::ostream &os,
   return os;
 }
 
-inline std::ostream &operator<<(std::ostream &os,
-                                const Response &response) {
+inline std::ostream &operator<<(std::ostream &os, const Response &response) {
   os << "Response: ";
   os << "order_id=" << response.order_id;
   os << ",side=" << response.side;

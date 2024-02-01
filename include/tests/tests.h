@@ -24,6 +24,11 @@ private:
   void tcp_client_server_test();
 
   void address_splitter_test();
+
+  void run_side_book_tests();
+
+  void bid_side_book_tests();
+  void ask_side_book_tests();
   std::ostream &os_;
 };
 } // namespace tests

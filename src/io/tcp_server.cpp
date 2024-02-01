@@ -10,7 +10,8 @@ TCPServer::TCPServer(const std::string &address_info, std::ostream &os)
     exit(EXIT_FAILURE);
   }
   const int enable = 1;
-  if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+  if (setsockopt(server_fd_, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) <
+      0) {
     log_ << "TCPServer: setsock opt error. errno=" << errno << std::endl;
     exit(EXIT_FAILURE);
   }

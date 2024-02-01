@@ -128,8 +128,8 @@ template <typename Comparator>
 void SideBook<Comparator>::add_order(uint64_t order_id, double price,
                                      std::uint32_t quantity) {
   // it is assumed that the market data is clean and no order id will be
-  // repeated for new order for a given side
-  assert(!mbo_map_.contains(order_id));
+  // repeated for new order for a given side.otherwise return
+  if (mbo_map_.contains(order_id)) return;
   mbo_map_[order_id] = {.price = price, .quantity = quantity};
   // update price levels here. Do not add price level beyond the 5th level.
   for (std::size_t i = 0; i < num_levels; ++i) {

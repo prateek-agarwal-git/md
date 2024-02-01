@@ -7,10 +7,8 @@ namespace MDI {
 
 struct MarketDataInjector {
   MarketDataInjector(const std::string &address_info, std::ostream &log)
-      : log_(log), ms_(address_info, log), mdp_(ms_) {}
-      void read_data(std::istream& is){
-        mdp_.read_data(is);
-      }
+      : log_(log), ms_(address_info, log), mdp_(ms_, log) {}
+  void read_data(std::istream &is) { mdp_.read_data(is); }
 
 private:
   std::ostream &log_;

@@ -8,11 +8,17 @@ static constexpr std::string_view usage =
 int main(int argc, char **argv) {
 
   auto [multicast_group_1, multicast_group_2, exchange_connection_1,
-        exchange_connection_2] = strategy::parse_commandline(argc, argv);
-  if (multicast_group_1.empty() || multicast_group_2.empty() ||
-      exchange_connection_1.empty() || exchange_connection_2.empty()) {
+        exchange_connection_2, log_file] =
+      strategy::parse_commandline(argc, argv);
+  if (multicast_group_1.empty() || exchange_connection_1.empty()) {
     std::cout << usage << std::endl;
     exit(EXIT_FAILURE);
   }
+  strategy::Strategy S({.multicast_group_1 = multicast_group_1,
+                        .exchange_connection_1 = exchange_connection_1,
+                        .multicast_group_2 = multicast_group_2,
+                        .exchange_connection_2 = exchange_connection_2,
+                        .log = std::cout});
+  S.start_reading();
   return 0;
 }

@@ -27,7 +27,7 @@ struct Quoter {
       }
       prev_bid_price_ = price;
       prev_bid_qty_ = quantity;
-    } else {
+    } else if (order_side == 'S') {
 
       if (!common::almost_equal(price, prev_ask_price_) ||
           !(quantity == prev_ask_qty_)) {

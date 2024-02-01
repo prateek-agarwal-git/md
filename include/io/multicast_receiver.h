@@ -23,6 +23,7 @@ private:
   struct sockaddr_in addr_;
   ReaderFn fn_;
   bool stop_reading_{false};
+  char in_buffer_[128];
 };
 
 } // namespace io

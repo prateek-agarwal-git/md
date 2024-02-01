@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 namespace MDI {
@@ -11,16 +12,20 @@ void MarketDataParser::read_data(std::istream &is) {
   while (!is.eof()) {
     std::string line;
     std::getline(is, line, '\n');
-    common::BinaryMarketData data = parse_order(line);
-    std::memcpy(out_buffer_, reinterpret_cast<void *>(&data), sizeof(data));
-    Fn_({out_buffer_, sizeof(data)});
+    auto data = parse_order(line);
+    if (!data)
+      continue;
+    auto bmd = *data;
+    os_ <<bmd;
+    std::memcpy(out_buffer_, reinterpret_cast<void *>(&bmd), sizeof(bmd));
+    Fn_({out_buffer_, sizeof(bmd)});
     std::memset(out_buffer_, 0, sizeof(out_buffer_));
   }
 }
 
-common::BinaryMarketData
+std::optional<common::BinaryMarketData>
 MarketDataParser::parse_order(const std::string &line) {
-    //TODO:: clean this up with helper methods if time permits
+  // TODO:: clean this up with helper methods if time permits
   std::stringstream ss(line);
   common::BinaryMarketData data;
   uint64_t epoch;
@@ -34,29 +39,31 @@ MarketDataParser::parse_order(const std::string &line) {
   std::memcpy(data.symbol, symbol.c_str(), symbol.size());
   std::string side;
   ss >> side;
-  assert(side == "SELL" || side == "BUY");
   if (side == "SELL") {
     data.side = 'S';
-  } else {
+  } else if (side == "BUY") {
     data.side = 'B';
+  } else {
+    // some trades are marked unknown
+    return {};
   }
 
   std::string order_category;
   ss >> order_category;
-  assert(order_category == "NEW" || order_category == "CANCEL" ||
-         order_category == "TRADE");
   if (order_category == "NEW") {
     data.order_category = 'N';
-  } else if (order_category == "CANCEL")
+  } else if (order_category == "CANCEL") {
     data.order_category = 'C';
-  else {
+  } else if (order_category == "TRADE") {
     data.order_category = 'T';
+  } else {
+    return {};
   }
   double price;
-  ss >>price;
+  ss >> price;
   data.price = price;
   uint32_t quantity;
-  ss >>quantity;
+  ss >> quantity;
   data.quantity = quantity;
   return data;
 }

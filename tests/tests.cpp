@@ -6,10 +6,11 @@
 #include "io/multicast_sender.h"
 #include "io/tcp_client.h"
 #include "io/tcp_server.h"
-#include "market_data_injector/market_data_parser.h"
 #include "market_data_injector/market_data_injector.h"
+#include "market_data_injector/market_data_parser.h"
 #include "strategy/order_book.h"
 #include "strategy/quoter.h"
+#include "strategy/request_queue.h"
 #include "strategy/response_reader.h"
 #include "strategy/side_book.h"
 #include "strategy/strategy_thread.h"
@@ -44,6 +45,7 @@ void test_fixture::run_tests() {
   run_side_book_tests();
   response_reader_test();
   quoter_test();
+  strategy::Queue<int> q;
 }
 
 void test_fixture::quoter_test() {
@@ -378,7 +380,7 @@ void test_fixture::market_data_parser_test(
     return;
   };
 
-  MDI::MarketDataParser mp(std::move(cb));
+  MDI::MarketDataParser mp(std::move(cb), os_);
   std::stringstream ss(input);
   mp.read_data(ss);
   auto bmd = reinterpret_cast<common::BinaryMarketData *>(buffer);

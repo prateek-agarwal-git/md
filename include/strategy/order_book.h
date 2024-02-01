@@ -8,15 +8,14 @@
 #include <string_view>
 #include <unordered_map>
 namespace strategy {
+  template<typename QuoterCb>
 struct OrderBook {
 
   struct top_levels {
     SideBook<common::GreaterDouble>::mbp_entry bid_level;
     SideBook<common::LesserDouble>::mbp_entry ask_level;
   };
-  using QuoterCb = std::function<void(double price, std::uint32_t quantity,
-                                      char order_side)>;
-  OrderBook(QuoterCb &&cb, std::ostream& os) : os_(os),quoter_cb_(cb) {}
+  OrderBook(QuoterCb &cb, std::ostream& os) : os_(os),quoter_cb_(cb) {}
   void operator()(std::string_view data) {
     auto *bmd = reinterpret_cast<const common::BinaryMarketData *>(data.data());
     os_<<*bmd;
@@ -38,7 +37,7 @@ struct OrderBook {
 
 private:
   std::ostream &os_;
-  QuoterCb quoter_cb_;
+  QuoterCb& quoter_cb_;
   SideBook<common::GreaterDouble> bid_book_{};
   SideBook<common::LesserDouble> ask_book_{};
 };

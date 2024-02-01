@@ -38,7 +38,7 @@ MulticastReceiver::MulticastReceiver(const std::string &address_info,
     exit(EXIT_FAILURE);
   }
   std::cout << "multicast_listener created" << std::endl;
-  std::cout << "multicast_listener created fd_" <<fd_<< std::endl;
+  std::cout << "multicast_listener created fd_" << fd_ << std::endl;
 }
 
 void MulticastReceiver::start_reading() {
@@ -51,6 +51,7 @@ void MulticastReceiver::start_reading() {
     if (cnt == 0) {
       break;
     }
+
     if (cnt > 0) {
       fn_({in_buffer_, std::size_t(cnt)});
       std::memset(in_buffer_, 0, sizeof(in_buffer_));

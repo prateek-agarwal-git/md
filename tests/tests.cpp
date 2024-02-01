@@ -38,14 +38,13 @@ void test_fixture::run_tests() {
   market_data_parser_test_1();
   market_data_parser_test_2();
   market_data_parser_test_3();
-  multicast_sender_receiver_test();
   tcp_client_server_test();
+  multicast_sender_receiver_test();
   address_splitter_test();
   exchange_test();
   run_side_book_tests();
   response_reader_test();
   quoter_test();
-  strategy::Queue<int> q;
 }
 
 void test_fixture::quoter_test() {

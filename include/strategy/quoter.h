@@ -8,10 +8,11 @@
 namespace strategy {
 // computes signal and sends order if required based on the top levelprice and
 // quantity of the book on the side on which order is received
+template<typename WriteCb>
 struct Quoter {
   //   tcp client callback
-  using WriterCb = std::function<void(std::string_view)>;
-  Quoter(WriterCb &&cb) : write_cb_(cb) {}
+  //using WriterCb = std::function<void(std::string_view)>;
+  Quoter(WriteCb &cb) : write_cb_(cb) {}
   void operator()(double price, std::uint32_t quantity, char order_side) {
     // trading logic, if the price or quantity levels change at the top
     // level,fire and order on the new price with quantity 5.
@@ -45,7 +46,7 @@ struct Quoter {
   }
 
 private:
-  WriterCb write_cb_;
+  WriteCb& write_cb_;
   std::uint64_t bid_curr_order_id_{1};
   std::uint64_t ask_curr_order_id_{1};
 

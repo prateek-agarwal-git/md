@@ -1,6 +1,7 @@
 #include "strategy/strategy.h"
 #include "strategy/commandline_parser.h"
 #include <iostream>
+#include <fstream>
 #include <string_view>
 
 static constexpr std::string_view usage =
@@ -14,11 +15,15 @@ int main(int argc, char **argv) {
     std::cout << usage << std::endl;
     exit(EXIT_FAILURE);
   }
+  if (log_file.empty()) {
+    log_file = "exchange_" + std::to_string(getpid()) + ".txt";
+  }
+  std::ofstream ofs(log_file, std::ios::out);
   strategy::Strategy S({.multicast_group_1 = multicast_group_1,
                         .exchange_connection_1 = exchange_connection_1,
                         .multicast_group_2 = multicast_group_2,
                         .exchange_connection_2 = exchange_connection_2,
-                        .log = std::cout});
+                        .log = ofs});
   S.start_reading();
   return 0;
 }

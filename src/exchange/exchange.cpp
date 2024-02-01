@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
   std::ofstream ofs(log_file, std::ios::out);
   io::TCPServer S(std::string(argv[1]), ofs);
   exchange::Exchange E(S, ofs);
+  E.set_read_cb();
   // TODO write signalhandler for stopping the exchange thread.
   // std::thread t{&exchange::Exchange<io::TCPServer>::stop_reading, &E };
   E.start_reading();

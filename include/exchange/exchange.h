@@ -22,6 +22,7 @@ template <typename Server> struct Exchange {
     response_ptr->order_category = tolower(request->order_category);
     response_ptr->price = request->price;
     response_ptr->quantity = request->quantity;
+    log_<< *response_ptr;
     server_({response, sizeof(common::Response)});
   }
   void set_read_cb() {

@@ -7,11 +7,12 @@
 #include "io/tcp_client.h"
 #include "io/tcp_server.h"
 #include "market_data_injector/market_data_parser.h"
-#include "strategy/order_book.h"
-#include "strategy/side_book.h"
+#include "market_data_injector/market_data_injector.h"
 #include "strategy/order_book.h"
 #include "strategy/quoter.h"
 #include "strategy/response_reader.h"
+#include "strategy/side_book.h"
+#include "strategy/strategy_thread.h"
 #include "tests/test_server.h"
 #include <algorithm>
 #include <cstring>
@@ -33,15 +34,81 @@ int main() {
 namespace tests {
 
 void test_fixture::run_tests() {
-    market_data_parser_test_1();
-    market_data_parser_test_2();
-    market_data_parser_test_3();
-    multicast_sender_receiver_test();
-    tcp_client_server_test();
-    address_splitter_test();
-    exchange_test();
+  market_data_parser_test_1();
+  market_data_parser_test_2();
+  market_data_parser_test_3();
+  multicast_sender_receiver_test();
+  tcp_client_server_test();
+  address_splitter_test();
+  exchange_test();
   run_side_book_tests();
+  response_reader_test();
+  quoter_test();
 }
+
+void test_fixture::quoter_test() {
+  common::Request request;
+  auto cb = [&request](std::string_view request_data) {
+    request = *reinterpret_cast<const common::Request *>(request_data.data());
+  };
+  strategy::Quoter quoter(cb);
+  quoter(10.0, 10, 'S');
+  common::Request expected_request{.order_id = 1,
+                                   .side = 'S',
+                                   .order_category = 'N',
+                                   .price = 10.0,
+                                   .quantity = 5};
+  assert_true("quoter_test_1", request == expected_request);
+
+  request = {};
+  quoter(11.0, 10, 'S');
+  expected_request = {.order_id = 2,
+                      .side = 'S',
+                      .order_category = 'N',
+                      .price = 11.0,
+                      .quantity = 5};
+  assert_true("quoter_test_2", request == expected_request);
+  request = {};
+  // no change in top level. No request would be fired.
+  expected_request = {};
+  quoter(11.0, 10, 'S');
+  assert_true("quoter_test_3", request == expected_request);
+
+  // buy side
+  expected_request = {.order_id = 1,
+                      .side = 'B',
+                      .order_category = 'N',
+                      .price = 22.0,
+                      .quantity = 5};
+  request = {};
+  quoter(22.0, 10, 'B');
+
+  assert_true("quoter_test_4", request == expected_request);
+}
+void test_fixture::response_reader_test() {
+  std::stringstream ss;
+  strategy::ResponseReader reader(ss);
+  common::Response response{.order_id = 23,
+                            .side = 'b',
+                            .order_category = 'n',
+                            .price = 97.4,
+                            .quantity = 74};
+  reader({reinterpret_cast<char *>(&response), sizeof(response)});
+  assert_true(
+      "response_reader_test_1",
+      ss.str() ==
+          "response_counter=1 Response: "
+          "order_id=23,side=b,order_category=n,price=97.4,quantity=74\n");
+
+  ss.str(std::string());
+  reader({reinterpret_cast<char *>(&response), sizeof(response)});
+  assert_true(
+      "response_reader_test_2",
+      ss.str() ==
+          "response_counter=2 Response: "
+          "order_id=23,side=b,order_category=n,price=97.4,quantity=74\n");
+}
+
 void test_fixture::run_side_book_tests() {
   bid_side_book_tests();
   ask_side_book_tests();
@@ -224,7 +291,6 @@ void test_fixture::tcp_client_server_test() {
   };
   server.set_read_cb(server_read_cb);
   std::thread read_thread{&io::TCPServer::start_reading, &server};
-  sleep(2);
   io::TCPClient client(address_info, os_, client_read_cb);
   client("hello");
   assert_true("tcp_client_server_test",

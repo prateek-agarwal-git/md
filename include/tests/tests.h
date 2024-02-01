@@ -21,6 +21,7 @@ private:
                                const std::string &input,
                                const common::BinaryMarketData &);
 
+  void response_reader_test();
   void tcp_client_server_test();
 
   void address_splitter_test();
@@ -29,6 +30,7 @@ private:
 
   void bid_side_book_tests();
   void ask_side_book_tests();
+  void quoter_test();
   std::ostream &os_;
 };
 } // namespace tests

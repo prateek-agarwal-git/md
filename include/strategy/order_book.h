@@ -15,7 +15,7 @@ struct OrderBook {
   };
   using QuoterCb = std::function<void(double price, std::uint32_t quantity,
                                       char order_side)>;
-  OrderBook(QuoterCb &cb) : quoter_cb_(cb) {}
+  OrderBook(QuoterCb &&cb) : quoter_cb_(cb) {}
   void operator()(std::string_view data) {
     auto *bmd = reinterpret_cast<const common::BinaryMarketData *>(data.data());
     if (bmd->side == 'S') {
@@ -35,7 +35,7 @@ struct OrderBook {
   }
 
 private:
-  QuoterCb &quoter_cb_;
+  QuoterCb quoter_cb_;
   SideBook<common::GreaterDouble> bid_book_{};
   SideBook<common::LesserDouble> ask_book_{};
 };

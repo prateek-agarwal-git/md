@@ -24,6 +24,7 @@ struct TCPServer {
   ~TCPServer();
 
 private:
+  int server_fd_{-1};
   int client_fd_{-1};
   std::ostream &log_;
   char in_buffer_[128];

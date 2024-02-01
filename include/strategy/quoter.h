@@ -18,8 +18,11 @@ struct Quoter {
     if (order_side == 'B') {
       if (!common::almost_equal(price, prev_bid_price_) ||
           !(quantity == prev_bid_qty_)) {
-        common::Request r{
-            .order_id = 1, .side = order_side, .price = price, .quantity = 5};
+        common::Request r{.order_id = bid_curr_order_id_++,
+                          .side = order_side,
+                          .order_category = 'N',
+                          .price = price,
+                          .quantity = 5};
         write_cb_({reinterpret_cast<char *>(&r), sizeof(r)});
       }
       prev_bid_price_ = price;
@@ -28,8 +31,11 @@ struct Quoter {
 
       if (!common::almost_equal(price, prev_ask_price_) ||
           !(quantity == prev_ask_qty_)) {
-        common::Request r{
-            .order_id = 1, .side = order_side, .price = price, .quantity = 5};
+        common::Request r{.order_id = ask_curr_order_id_++,
+                          .side = order_side,
+                          .order_category = 'N',
+                          .price = price,
+                          .quantity = 5};
         write_cb_({reinterpret_cast<char *>(&r), sizeof(r)});
       }
 
@@ -40,6 +46,8 @@ struct Quoter {
 
 private:
   WriterCb write_cb_;
+  std::uint64_t bid_curr_order_id_{1};
+  std::uint64_t ask_curr_order_id_{1};
 
   double prev_bid_price_{};
   std::uint32_t prev_bid_qty_{};

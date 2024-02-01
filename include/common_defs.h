@@ -54,12 +54,17 @@ inline std::ostream &operator<<(std::ostream &os,
 
 // each mock exchange is for one symbol
 struct Request {
-  uint64_t order_id;   // assume it to be a client order id filled by the client
+  // default  initialized for testing
+  uint64_t order_id{};   // assume it to be a client order id filled by the client
                        // for simplicity of exchange
-  char side;           // 'can be 'B'  or 'S'
-  char order_category; // 'N', 'C'
-  double price;
-  uint32_t quantity;
+  char side{};           // 'can be 'B'  or 'S'
+  char order_category{}; // 'N', 'C'
+  double price{};
+  uint32_t quantity{};
+  bool operator==(const Request &other) const {
+    return order_id == other.order_id && side == other.side &&
+           almost_equal(price, other.price) && quantity == other.quantity;
+  }
 } __attribute__((packed));
 
 // exchange will echo the request by turning side and order category into lower

@@ -9,6 +9,9 @@
 #include "market_data_injector/market_data_parser.h"
 #include "strategy/order_book.h"
 #include "strategy/side_book.h"
+#include "strategy/order_book.h"
+#include "strategy/quoter.h"
+#include "strategy/response_reader.h"
 #include "tests/test_server.h"
 #include <algorithm>
 #include <cstring>
@@ -30,13 +33,13 @@ int main() {
 namespace tests {
 
 void test_fixture::run_tests() {
-  //  market_data_parser_test_1();
-  //  market_data_parser_test_2();
-  //  market_data_parser_test_3();
-  //  multicast_sender_receiver_test();
-  //  tcp_client_server_test();
-  //  address_splitter_test();
-  //  exchange_test();
+    market_data_parser_test_1();
+    market_data_parser_test_2();
+    market_data_parser_test_3();
+    multicast_sender_receiver_test();
+    tcp_client_server_test();
+    address_splitter_test();
+    exchange_test();
   run_side_book_tests();
 }
 void test_fixture::run_side_book_tests() {

@@ -20,8 +20,6 @@ MulticastSender::MulticastSender(const std::string &address_info,
                                  std::ostream &os)
     : os_(os) {
   auto [group_ip, port] = common::get_ip_port(address_info);
-  std::cout <<"group_ip MCS="  << group_ip<< std::endl;
-  std::cout <<"port MCS="  << port<< std::endl;
   fd_ = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd_ < 0) {
     os_ << "socket opening error. errno=" << errno << std::endl;

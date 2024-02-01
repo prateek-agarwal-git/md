@@ -1,7 +1,9 @@
 #include "exchange/exchange.h"
 #include "io/tcp_server.h"
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <signal.h>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -9,6 +11,10 @@
 
 static constexpr std::string_view usage =
     R"(./<binary-name> 127.0.0.1:10100 <logfile_path>)";
+namespace {
+std::function<void()> signal_fn;
+}
+static void signal_handler(int signum) { signal_fn(); }
 
 int main(int argc, char **argv) {
   if (argc < 2) {
@@ -25,10 +31,10 @@ int main(int argc, char **argv) {
   io::TCPServer S(std::string(argv[1]), ofs);
   exchange::Exchange E(S, ofs);
   E.set_read_cb();
-  // TODO write signalhandler for stopping the exchange thread.
-  // std::thread t{&exchange::Exchange<io::TCPServer>::stop_reading, &E };
+  signal_fn = [&E]() { E.stop_reading(); };
+
+  signal(SIGUSR1, signal_handler);
   E.start_reading();
   ofs.close();
-  // t.join();
   return 0;
 }
